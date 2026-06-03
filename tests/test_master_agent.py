@@ -1,3 +1,5 @@
+import httpx
+
 from app.mcp.master_agent import MasterAgentRunner
 
 
@@ -15,6 +17,19 @@ def test_parse_delegations():
 
 def test_fallback_response():
     runner = MasterAgentRunner(db=None, pipeline_id=None)  # type: ignore[arg-type]
-    ctx = {"name": "Test", "nodes": [{"id": "1", "type": "SOURCE", "subtype": "csv", "label": "A", "status": "IDLE"}], "edges": []}
+    ctx = {
+        "name": "Test",
+        "nodes": [{"id": "1", "type": "SOURCE", "subtype": "csv", "label": "A", "status": "IDLE"}],
+        "edges": [],
+    }
     reply = runner._fallback_response("profile anomalies", ctx)
     assert "PROFILER" in reply or "offline" in reply.lower()
+
+
+def test_http_error_message_429():
+    runner = MasterAgentRunner(db=None, pipeline_id=None)  # type: ignore[arg-type]
+    request = httpx.Request("POST", "https://example.com")
+    response = httpx.Response(429, request=request, text='{"error":{"message":"quota"}}')
+    msg = runner._http_error_message(httpx.HTTPStatusError("429", request=request, response=response))
+    assert "429" in msg
+    assert "⚠️" in msg

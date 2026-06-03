@@ -90,6 +90,7 @@ async def update_pipeline(db: AsyncSession, pipeline_id: UUID, data: PipelineUpd
     if data.architecture_design is not None:
         pipeline.architecture_design = data.architecture_design
     await db.flush()
+    pipeline = await get_pipeline_or_404(db, pipeline_id)
     read = pipeline_to_read(pipeline)
     await ws_manager.broadcast(
         pipeline_id,

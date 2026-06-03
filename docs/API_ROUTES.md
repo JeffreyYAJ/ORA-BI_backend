@@ -29,6 +29,19 @@ Documentation interactive : `/docs`
 | 12 | GET | `/api/v1/pipelines/{pipeline_id}/chat` | Non | Chat |
 | 13 | POST | `/api/v1/pipelines/{pipeline_id}/chat` | **Oui** | Chat |
 | 14 | WS | `/api/v1/ws/pipelines/{pipeline_id}` | Non | WebSocket |
+| 15 | POST | `/api/v1/pipelines/{pipeline_id}/runs` | Non | Exécution |
+| 16 | GET | `/api/v1/pipelines/{pipeline_id}/runs/{run_id}` | Non | Exécution |
+| 17 | POST | `/api/v1/pipelines/{pipeline_id}/runs/{run_id}/resume` | Non | Exécution |
+| 18 | POST | `/api/v1/pipelines/{pipeline_id}/runs/{run_id}/answer` | Non | Exécution |
+| 19 | GET | `/api/v1/pipelines/{pipeline_id}/approvals` | Non | Gardien |
+| 20 | POST | `/api/v1/pipelines/{pipeline_id}/approvals/{approval_id}/decide` | Non | Gardien |
+| 21 | GET | `/api/v1/pipelines/{pipeline_id}/agent-tasks` | Non | Agents |
+| 22 | POST | `/api/v1/pipelines/{pipeline_id}/agent-tasks/{task_id}/execute` | Partiel | Agents |
+| 23 | GET | `/api/v1/pipelines/{pipeline_id}/questions` | Non | Questions |
+| 24 | POST | `/api/v1/pipelines/{pipeline_id}/questions/{question_id}/answer` | Non | Questions |
+
+Détail Gardien / exécution : [GUARDIAN_EXECUTION.md](GUARDIAN_EXECUTION.md).  
+Questions contextuelles : [CONTEXTUAL_QUESTIONS.md](CONTEXTUAL_QUESTIONS.md).
 
 ---
 

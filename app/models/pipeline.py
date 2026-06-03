@@ -28,3 +28,6 @@ class Pipeline(Base):
     edges = relationship("Edge", back_populates="pipeline", cascade="all, delete-orphan")
     chat_messages = relationship("ChatMessage", back_populates="pipeline", cascade="all, delete-orphan")
     agent_tasks = relationship("AgentTask", back_populates="pipeline", cascade="all, delete-orphan")
+    pipeline_runs = relationship("PipelineRun", back_populates="pipeline", cascade="all, delete-orphan")
+    guardian_approvals = relationship("GuardianApproval", back_populates="pipeline", cascade="all, delete-orphan")
+    user_questions = relationship("UserQuestion", back_populates="pipeline", cascade="all, delete-orphan")

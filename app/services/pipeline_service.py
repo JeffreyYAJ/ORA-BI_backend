@@ -135,7 +135,24 @@ async def create_node(db: AsyncSession, pipeline_id: UUID, data: NodeCreate) -> 
 
 
 async def update_node(db: AsyncSession, pipeline_id: UUID, node_id: UUID, data: NodeUpdate) -> NodeRead:
+    from app.services.guardian_service import check_node_update
+
     node = await _get_node_in_pipeline(db, pipeline_id, node_id)
+    if data.data is not None:
+        approval = await check_node_update(
+            db, pipeline_id, node_id, node.internal_data or {}, data.data
+        )
+        if approval is not None:
+            from app.schemas.guardian import NodeUpdateBlockedResponse
+            from app.services.guardian_service import approval_to_read
+
+            raise HTTPException(
+                status_code=409,
+                detail=NodeUpdateBlockedResponse(
+                    detail="Modification bloquée — approbation humaine requise (Gardien / RGPD).",
+                    approval=approval_to_read(approval),
+                ).model_dump(mode="json"),
+            )
     if data.type is not None:
         node.type = data.type
     if data.subtype is not None:

@@ -59,7 +59,7 @@ async def call_cursor_composer(
     workspace = Path(settings.cursor_workspace).resolve()
     prompt = build_cursor_prompt(system_prompt, pipeline_context, history, user_content)
     options = AgentOptions(
-        api_key=os.getenv("CURSOR_API_KEY"),
+        api_key=settings.cursor_api_key,
         model="composer-2.5",
         local=LocalAgentOptions(cwd=str(workspace)),
     )

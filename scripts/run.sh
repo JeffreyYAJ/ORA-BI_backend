@@ -18,6 +18,9 @@ if [[ ! -d .venv ]]; then
   exit 1
 fi
 
+echo "Migrations Alembic…"
+.venv/bin/python -m alembic upgrade head
+
 echo "DataPipe API → http://${HOST}:${PORT}"
 echo "Docs         → http://127.0.0.1:${PORT}/docs"
 if command -v hostname >/dev/null 2>&1; then

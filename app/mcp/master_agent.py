@@ -2,7 +2,6 @@ import json
 import re
 from typing import Any
 from uuid import UUID
-import os
 
 import httpx
 from cursor_sdk import CursorAgentError
@@ -26,9 +25,15 @@ a JSON block at the end of your response (only when delegation is needed):
 ```
 
 Valid agent_role values: PROFILER, ENGINEER, DEBUGGER, GUARDIAN, QA, AUDITOR.
-Specialized agents are NOT executed in MVP — tasks stay PENDING for human review.
+GUARDIAN tasks are executed automatically (PII scan, RGPD masking, contextual user questions).
+Use GUARDIAN when: PII risk, export, column deletion, compliance, or before sensitive transforms.
+Pipeline execution: POST /api/v1/pipelines/{id}/runs — starts with data study (INITIAL_STUDY), then may ask
+contextual questions (POST /api/v1/pipelines/{id}/questions/{question_id}/answer).
+All specialized agents adapt questions to the studied pipeline context (columns, PII, gaps).
 
-Ask clarifying questions if the user has not uploaded data files or provided DB credentials.
+Ask clarifying questions in chat when needed; for execution-blocking choices, agents use the questions API.
+When live_data_profile is present, base answers on real column names and row counts.
+For ETL requests, delegate ENGINEER with the user's exact instruction; results appear via POST .../etl/execute.
 """
 
 GEMINI_API_BASE = "https://generativelanguage.googleapis.com/v1beta"
@@ -79,25 +84,31 @@ class MasterAgentRunner:
         return {"content": clean_content, "metadata": metadata}, new_tasks
 
     def _pipeline_context_text(self, pipeline_context: dict[str, Any]) -> str:
-        return json.dumps(
-            {
-                "pipeline_id": pipeline_context.get("id"),
-                "name": pipeline_context.get("name"),
-                "nodes": [
-                    {
-                        "id": str(n["id"]),
-                        "type": n["type"],
-                        "subtype": n["subtype"],
-                        "label": n["label"],
-                        "status": n.get("status"),
-                    }
-                    for n in pipeline_context.get("nodes", [])
-                ],
-                "edges": pipeline_context.get("edges", []),
-            },
-            indent=2,
-            ensure_ascii=False,
-        )
+        payload: dict[str, Any] = {
+            "pipeline_id": pipeline_context.get("id"),
+            "name": pipeline_context.get("name"),
+            "nodes": [
+                {
+                    "id": str(n["id"]),
+                    "type": n["type"],
+                    "subtype": n["subtype"],
+                    "label": n["label"],
+                    "status": n.get("status"),
+                    "data": n.get("data", {}),
+                }
+                for n in pipeline_context.get("nodes", [])
+            ],
+            "edges": pipeline_context.get("edges", []),
+        }
+        if pipeline_context.get("live_data_profile"):
+            payload["live_data_profile"] = pipeline_context["live_data_profile"]
+        if pipeline_context.get("last_etl_result"):
+            payload["last_etl_result"] = {
+                "instruction": pipeline_context["last_etl_result"].get("instruction"),
+                "sql": pipeline_context["last_etl_result"].get("sql"),
+                "row_count": pipeline_context["last_etl_result"].get("row_count"),
+            }
+        return json.dumps(payload, indent=2, ensure_ascii=False)
 
     async def _call_llm(
         self,
@@ -241,15 +252,6 @@ class MasterAgentRunner:
             "puis redémarrez l'API (voir docs/CURSOR_API_KEYS.md).\n\n"
         )
         if "profil" in user_content.lower() or "anomal" in user_content.lower():
-<<<<<<< HEAD
-            instruction = f"Profile pipeline data per user request: {user_content[:200]}"
-            delegation = (
-                '[{"agent_role": "PROFILER", "instruction": '
-                + json.dumps(instruction)
-                + ', "node_id": null}]'
-            )
-            reply += f"I would delegate profiling to the Profiler agent.\n\n```delegation\n{delegation}\n```"
-=======
             instruction = f"Profiler les données : {user_content[:200]}"
             delegation = (
                 '[{"agent_role": "PROFILER", "instruction": '
@@ -257,7 +259,6 @@ class MasterAgentRunner:
                 + ', "node_id": null}]'
             )
             reply += f"Délégation suggérée vers le Profiler.\n\n```delegation\n{delegation}\n```"
->>>>>>> b6678a9 (removed apis)
         elif nodes:
             reply += "Précisez la transformation souhaitée ou uploadez un fichier source CSV/JSON."
         else:

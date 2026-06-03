@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.config import get_settings
 from app.models.agent_task import AgentTask
 from app.models.enums import AgentRole
-from app.services.chat_service import create_agent_task
+from app.services.agent_task_service import create_agent_task
 
 SYSTEM_PROMPT = """You are the Master Agent for DataPipe, a visual ETL system for banking pipelines.
 You orchestrate specialized agents (Profiler, Engineer, Debugger, Guardian, QA, Auditor).
@@ -134,11 +134,13 @@ class MasterAgentRunner:
             "Set the API key to enable full Master Agent reasoning.\n\n"
         )
         if "profil" in user_content.lower() or "anomal" in user_content.lower():
-            reply += (
-                "I would delegate profiling to the Profiler agent.\n\n"
-                '```delegation\n[{"agent_role": "PROFILER", "instruction": '
-                f'"Profile pipeline data per user request: {user_content[:200]}", "node_id": null}]\n```'
+            instruction = f"Profile pipeline data per user request: {user_content[:200]}"
+            delegation = (
+                '[{"agent_role": "PROFILER", "instruction": '
+                + json.dumps(instruction)
+                + ', "node_id": null}]'
             )
+            reply += f"I would delegate profiling to the Profiler agent.\n\n```delegation\n{delegation}\n```"
         elif nodes:
             reply += "Describe the transformation you need, or upload a CSV/JSON source file to continue."
         else:

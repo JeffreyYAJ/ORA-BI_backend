@@ -22,7 +22,8 @@ cp .env.example .env
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-pip install -e ".[dev]"
+pip install -r requirements.txt
+pip install -e ".[dev,mcp]"
 ```
 
 ### 3. Migrations

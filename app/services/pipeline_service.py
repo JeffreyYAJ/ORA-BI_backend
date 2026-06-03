@@ -57,7 +57,9 @@ async def get_pipeline_or_404(db: AsyncSession, pipeline_id: UUID) -> Pipeline:
 
 
 async def list_pipelines(db: AsyncSession, skip: int = 0, limit: int = 50) -> list[PipelineListItem]:
-    result = await db.execute(select(Pipeline).offset(skip).limit(limit).order_by(Pipeline.updated_at.desc()))
+    result = await db.execute(
+        select(Pipeline).order_by(Pipeline.updated_at.desc()).offset(skip).limit(limit)
+    )
     return [PipelineListItem.model_validate(p) for p in result.scalars().all()]
 
 

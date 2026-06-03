@@ -10,7 +10,7 @@ from sqlalchemy.orm import selectinload
 from app.db.session import async_session_factory
 from app.models.enums import AgentRole
 from app.models.pipeline import Pipeline
-from app.services.chat_service import create_agent_task
+from app.services.agent_task_service import create_agent_task
 from app.services.pipeline_service import pipeline_to_read
 
 mcp = FastMCP("DataPipe Master Agent")

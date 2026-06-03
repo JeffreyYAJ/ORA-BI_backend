@@ -4,9 +4,8 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.models.agent_task import AgentTask
 from app.models.chat_message import ChatMessage
-from app.models.enums import AgentRole, AgentTaskStatus, ChatSender
+from app.models.enums import ChatSender
 from app.models.pipeline import Pipeline
 from app.schemas.agent_task import AgentTaskRead
 from app.schemas.chat import ChatMessageRead, ChatResponse
@@ -35,27 +34,6 @@ async def list_chat_messages(db: AsyncSession, pipeline_id: UUID) -> list[ChatMe
         .order_by(ChatMessage.created_at.asc())
     )
     return [chat_message_to_read(m) for m in result.scalars().all()]
-
-
-async def create_agent_task(
-    db: AsyncSession,
-    pipeline_id: UUID,
-    agent_role: AgentRole,
-    instruction: str,
-    node_id: UUID | None = None,
-    input_payload: dict | None = None,
-) -> AgentTask:
-    task = AgentTask(
-        pipeline_id=pipeline_id,
-        agent_role=agent_role,
-        instruction=instruction,
-        node_id=node_id,
-        input_payload=input_payload or {},
-        status=AgentTaskStatus.PENDING,
-    )
-    db.add(task)
-    await db.flush()
-    return task
 
 
 async def handle_chat_message(db: AsyncSession, pipeline_id: UUID, content: str) -> ChatResponse:

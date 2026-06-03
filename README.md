@@ -40,6 +40,8 @@ uvicorn app.main:app --reload --port 8000
 
 OpenAPI docs: http://localhost:8000/docs
 
+Référence détaillée des routes (usage, utilité, exemples) : [docs/API_ROUTES.md](docs/API_ROUTES.md)
+
 ### Docker (API + DB)
 
 ```bash
